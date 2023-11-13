@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 project(jack_llvm)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_COMPILER /opt/homebrew/opt/llvm/bin/clang++)
 set(MY_CALC_LLVM_CONFIG /opt/homebrew/opt/llvm/bin/llvm-config)
 

@@ -1,17 +1,15 @@
 #include "IR_Codegen_Visitor.h"
+
+#include <memory>
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Module.h"
-#include "llvm/IR/Value.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
-#include "llvm/IR/Constants.h"
 #include "llvm/IR/DerivedTypes.h"
-#include "llvm/IR/Type.h"
-#include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/InstCombine/InstCombine.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Scalar/GVN.h"
@@ -20,6 +18,8 @@
 IRCodegenVisitor::IRCodegenVisitor() {
     this->context = std::make_unique<llvm::LLVMContext>();
     this->module = std::make_unique<llvm::Module>("Module", *context);
+    this->builder = std::make_unique<llvm::IRBuilder<>>(*context);
+    this->varEnv = std::map<std::string, llvm::AllocaInst*>{};
 }
 
 void IRCodegenVisitor::codegenProgram(const ProgramIR &program) {
@@ -59,7 +59,44 @@ llvm::FunctionType* IRCodegenVisitor::codegenFunctionType(const FunctionIR &func
 }
 
 void IRCodegenVisitor::codegenFunctionProtos(const std::vector<std::unique_ptr<FunctionIR>> &functions) {
+    for (auto &function: functions) {
+        auto functionType = codegenFunctionType(*function);
+        llvm::Function::Create(functionType, llvm::Function::ExternalLinkage,
+                               function->functionName, module.get());
+    }
+}
 
+void IRCodegenVisitor::codegenFunctionDefinition(const FunctionIR &function) {
+    auto llvmFunction = module->getFunction(llvm::StringRef(function.functionName));
+    auto entryBasicBlock = llvm::BasicBlock::Create(*context, "entry", llvmFunction);
+    builder->SetInsertPoint(entryBasicBlock);
+
+    varEnv.clear();
+    for (auto &param: llvmFunction->args()) {
+        int paramNo = param.getArgNo();
+        auto paramName = function.params[paramNo]->paramName;
+        auto paramType = llvmFunction->getFunctionType()->getParamType(paramNo);
+        varEnv[paramName] = builder->CreateAlloca(paramType, nullptr, llvm::Twine(paramName));
+        builder->CreateStore(&param, varEnv[paramName]);
+    }
+
+    llvm::Value* returnValue;
+    for (auto &expr: function.bodyExpr) {
+        returnValue = expr->codegen(*this);
+    }
+
+    if (llvmFunction->getReturnType()->isVoidTy()) {
+        builder->CreateRetVoid();
+    } else {
+        builder->CreateRet(returnValue);
+    }
+    llvm::verifyFunction(*llvmFunction);
+}
+
+void IRCodegenVisitor::codegenFunctionDefinitions(const std::vector<std::unique_ptr<FunctionIR>> &functions) {
+    for (auto &function: functions) {
+        codegenFunctionDefinition(*function);
+    }
 }
 
 void IRCodegenVisitor::runOptimizingPasses(const std::vector<std::unique_ptr<FunctionIR>> &functions) {

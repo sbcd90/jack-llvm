@@ -2,6 +2,7 @@
 #ifndef IR_CODEGEN_VISITOR_H_
 #define IR_CODEGEN_VISITOR_H_
 
+#include <map>
 #include <memory>
 #include <vector>
 #include "llvm/IR/IRBuilder.h"
@@ -14,6 +15,8 @@ class IRCodegenVisitor: public IRVisitor {
 protected:
     std::unique_ptr<llvm::LLVMContext> context;
     std::unique_ptr<llvm::Module> module;
+    std::unique_ptr<llvm::IRBuilder<>> builder;
+    std::map<std::string, llvm::AllocaInst*> varEnv;
 public:
     IRCodegenVisitor();
 
