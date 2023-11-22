@@ -1,1 +1,6 @@
 #include "ExprIR.h"
+#include "IRVisitor.h"
+
+llvm::Value* ExprIntegerIR::codegen(IRVisitor &visitor) {
+    return visitor.codegen(*this);
+}
