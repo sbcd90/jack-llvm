@@ -117,3 +117,7 @@ void IRCodegenVisitor::runOptimizingPasses(const std::vector<std::unique_ptr<Fun
     auto llvmMainFun = module->getFunction(llvm::StringRef("main"));
     functionPassManager->run(*llvmMainFun);
 }
+
+llvm::Value* IRCodegenVisitor::codegen(const ExprIntegerIR &exprIr) {
+    return llvm::ConstantInt::getSigned((llvm::Type::getInt32Ty(*context)), exprIr.val);
+}

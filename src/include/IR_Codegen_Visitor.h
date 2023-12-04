@@ -9,6 +9,7 @@
 #include "IRVisitor.h"
 #include "FunctionIR.h"
 #include "ProgramIR.h"
+#include "ExprIR.h"
 
 class IRCodegenVisitor: public IRVisitor {
     const int NUM_RESERVED_FIELDS = 4;
@@ -36,6 +37,8 @@ public:
     void codegenFunctionProtos(const std::vector<std::unique_ptr<FunctionIR>> &functions);
     void codegenFunctionDefinition(const FunctionIR &function);
     void codegenFunctionDefinitions(const std::vector<std::unique_ptr<FunctionIR>> &functions);
+
+    virtual llvm::Value* codegen(const ExprIntegerIR &exprIr);
 };
 
 #endif
