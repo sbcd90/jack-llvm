@@ -10,8 +10,8 @@ struct ClassIR {
     std::vector<std::unique_ptr<TypeIR>> fields;
     std::vector<std::string> vTable;
 
-    ClassIR(const std::string &className, const std::vector<std::unique_ptr<TypeIR>> &fields, const std::vector<std::string> &vTable):
-        className(className), fields(fields), vTable(vTable) {}
+    ClassIR(const std::string &className, std::vector<std::unique_ptr<TypeIR>> fields, std::vector<std::string> vTable):
+        className(className), fields(std::move(fields)), vTable(std::move(vTable)) {}
 };
 
 #endif // CLASS_IR_H_

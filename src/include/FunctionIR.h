@@ -21,8 +21,8 @@ struct FunctionIR {
     std::vector<std::unique_ptr<ExprIR>> bodyExpr;
 
     FunctionIR(const std::string &functionName, std::unique_ptr<TypeIR> returnType,
-               const std::vector<std::unique_ptr<ParameterIR>> &params, const std::vector<std::unique_ptr<ExprIR>> &bodyExpr):
-               functionName(functionName), returnType(std::move(returnType)), params(params), bodyExpr(bodyExpr) {}
+               std::vector<std::unique_ptr<ParameterIR>> params, std::vector<std::unique_ptr<ExprIR>> bodyExpr):
+               functionName(functionName), returnType(std::move(returnType)), params(std::move(params)), bodyExpr(std::move(bodyExpr)) {}
 };
 
 #endif // FUNCTION_IR_H_

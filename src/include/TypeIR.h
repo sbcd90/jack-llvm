@@ -3,7 +3,7 @@
 #define TYPE_IR_H_
 
 #include <utility>
-#include "llvm/ir/Type.h"
+#include "llvm/IR/Type.h"
 
 class IRVisitor;
 

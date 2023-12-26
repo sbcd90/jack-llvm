@@ -10,6 +10,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/IR/DerivedTypes.h"
+#include "llvm/Support/Host.h"
 #include "llvm/Transforms/InstCombine/InstCombine.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Scalar/GVN.h"
@@ -22,6 +23,24 @@ IRCodegenVisitor::IRCodegenVisitor() {
     this->varEnv = std::map<std::string, llvm::AllocaInst*>{};
 }
 
+void IRCodegenVisitor::dumpLLVMIR() {
+    module->print(llvm::outs(), nullptr);
+}
+
+std::string IRCodegenVisitor::dumpLLVMIRToString() {
+    std::string outstr;
+    llvm::raw_string_ostream oss(outstr);
+
+    module->print(oss, nullptr);
+
+    return oss.str();
+}
+
+void IRCodegenVisitor::configureTarget() {
+    auto targetTriple = llvm::sys::getDefaultTargetTriple();
+    module->setTargetTriple(targetTriple);
+}
+
 void IRCodegenVisitor::codegenProgram(const ProgramIR &program) {
     codegenExternFunctionDeclarations();
     codegenClasses(program.classDefinitions);
@@ -29,6 +48,23 @@ void IRCodegenVisitor::codegenProgram(const ProgramIR &program) {
     codegenFunctionDefinitions(program.funcDefinitions);
     codegenMainExpr(program.mainExpr);
     runOptimizingPasses(program.funcDefinitions);
+}
+
+void IRCodegenVisitor::codegenMainExpr(const std::vector<std::unique_ptr<ExprIR>> &mainExpr) {
+    auto mainType = llvm::FunctionType::get(llvm::IntegerType::getInt32Ty(*context),
+                                            std::vector<llvm::Type*>{}, false);
+    auto main = llvm::Function::Create(mainType, llvm::Function::ExternalLinkage, "main", module.get());
+    auto mainBasicBlock = llvm::BasicBlock::Create(*context, "entry", main);
+    builder->SetInsertPoint(mainBasicBlock);
+    varEnv.clear();
+
+    for (auto &expr: mainExpr) {
+        expr->codegen(*this);
+    }
+
+    llvm::APInt retVal{32, (uint32_t) 0, true};
+    builder->CreateRet(llvm::ConstantInt::get(*context, retVal));
+    llvm::verifyFunction(*main);
 }
 
 void IRCodegenVisitor::codegenExternFunctionDeclarations() {
@@ -120,4 +156,16 @@ void IRCodegenVisitor::runOptimizingPasses(const std::vector<std::unique_ptr<Fun
 
 llvm::Value* IRCodegenVisitor::codegen(const ExprIntegerIR &exprIr) {
     return llvm::ConstantInt::getSigned((llvm::Type::getInt32Ty(*context)), exprIr.val);
+}
+
+llvm::Value* IRCodegenVisitor::codegen(const ExprBinOpIR &exprIr) {
+    auto expr1Val = exprIr.expr1->codegen(*this);
+    auto expr2Val = exprIr.expr2->codegen(*this);
+    if (expr1Val == nullptr || expr2Val == nullptr) {
+        throw new IRCodegenException(std::string{"Bin-op operand is null"});
+    }
+    switch (exprIr.op) {
+        case BinOpPlus:
+            return builder->CreateAdd(expr1Val, expr2Val, "add");
+    }
 }

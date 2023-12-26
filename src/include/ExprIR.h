@@ -21,4 +21,13 @@ struct ExprIntegerIR: public ExprIR {
     virtual llvm::Value* codegen(IRVisitor &visitor) override;
 };
 
+struct ExprBinOpIR: public ExprIR {
+    enum BinOp op;
+    std::unique_ptr<ExprIR> expr1;
+    std::unique_ptr<ExprIR> expr2;
+    ExprBinOpIR(enum BinOp op, std::unique_ptr<ExprIR> expr1, std::unique_ptr<ExprIR> expr2):
+            op(op), expr1(std::move(expr1)), expr2(std::move(expr2)) {}
+    virtual llvm::Value* codegen(IRVisitor &visitor) override;
+};
+
 #endif

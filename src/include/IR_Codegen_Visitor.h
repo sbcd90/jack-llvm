@@ -5,6 +5,7 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <string>
 #include "llvm/IR/IRBuilder.h"
 #include "IRVisitor.h"
 #include "FunctionIR.h"
@@ -39,6 +40,16 @@ public:
     void codegenFunctionDefinitions(const std::vector<std::unique_ptr<FunctionIR>> &functions);
 
     virtual llvm::Value* codegen(const ExprIntegerIR &exprIr);
+    virtual llvm::Value* codegen(const ExprBinOpIR &exprIr);
+};
+
+class IRCodegenException: public std::exception {
+    std::string errorMessage;
+public:
+    IRCodegenException(std::string message): errorMessage("IR Codegen Error: " + message) {}
+    const char* what() const throw() {
+        return errorMessage.c_str();
+    }
 };
 
 #endif
