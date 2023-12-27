@@ -1,6 +1,8 @@
 #include <iostream>
+#include "IR_Codegen_Visitor.h"
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+    auto codegen = std::make_unique<IRCodegenVisitor>();
+
     return 0;
 }

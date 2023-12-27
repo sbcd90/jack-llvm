@@ -169,3 +169,7 @@ llvm::Value* IRCodegenVisitor::codegen(const ExprBinOpIR &exprIr) {
             return builder->CreateAdd(expr1Val, expr2Val, "add");
     }
 }
+
+llvm::Type* IRCodegenVisitor::codegen(const TypeIntIR &typeIr) {
+    
+}

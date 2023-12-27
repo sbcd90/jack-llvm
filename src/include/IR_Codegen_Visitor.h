@@ -41,6 +41,11 @@ public:
 
     virtual llvm::Value* codegen(const ExprIntegerIR &exprIr);
     virtual llvm::Value* codegen(const ExprBinOpIR &exprIr);
+
+    virtual llvm::Type* codegen(const TypeIntIR &typeIr) override;
+    virtual llvm::Type* codegen(const TypeClassIR &typeIr) override;
+    virtual llvm::Type* codegen(const TypeBoolIR &typeIr) override;
+    virtual llvm::Type* codegen(const TypeVoidIR &typeIr) override;
 };
 
 class IRCodegenException: public std::exception {
