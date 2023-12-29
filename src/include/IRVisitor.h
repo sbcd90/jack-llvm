@@ -14,5 +14,9 @@ public:
     virtual llvm::Type* codegen(const TypeBoolIR &typeIr) = 0;
     virtual llvm::Value* codegen(const ExprIntegerIR &exprIr) = 0;
     virtual llvm::Value* codegen(const ExprBinOpIR &exprIr) = 0;
+    virtual llvm::Value* codegen(const ExprPrintfIR &exprIr) = 0;
+    virtual llvm::Value* codegen(const IdentifierVarIR &exprIr) = 0;
+    virtual llvm::Value* codegen(const IdentifierObjectVarIR &exprIr) = 0;
+    virtual llvm::Value* codegen(const ExprAssignIR &exprIr) = 0;
 };
 #endif // IR_VISITOR_H_

@@ -47,7 +47,7 @@ void IRCodegenVisitor::codegenProgram(const ProgramIR &program) {
     codegenFunctionProtos(program.funcDefinitions);
     codegenFunctionDefinitions(program.funcDefinitions);
     codegenMainExpr(program.mainExpr);
-    runOptimizingPasses(program.funcDefinitions);
+//    runOptimizingPasses(program.funcDefinitions);
 }
 
 void IRCodegenVisitor::codegenMainExpr(const std::vector<std::unique_ptr<ExprIR>> &mainExpr) {
@@ -170,6 +170,32 @@ llvm::Value* IRCodegenVisitor::codegen(const ExprBinOpIR &exprIr) {
     }
 }
 
+llvm::Value* IRCodegenVisitor::codegen(const ExprPrintfIR &exprIr) {
+    auto printf = module->getFunction("printf");
+    std::vector<llvm::Value*> printfArgs;
+    printfArgs.push_back(builder->CreateGlobalStringPtr(exprIr.formatStr));
+    for (auto &arg: exprIr.arguments) {
+        auto argVal = arg->codegen(*this);
+        if (argVal == nullptr) {
+            throw IRCodegenException{"Printf has null arg"};
+        }
+        printfArgs.push_back(argVal);
+    }
+    return builder->CreateCall(printf, printfArgs);
+}
+
 llvm::Type* IRCodegenVisitor::codegen(const TypeIntIR &typeIr) {
-    
+    return llvm::Type::getInt32Ty(*context);
+}
+
+llvm::Type* IRCodegenVisitor::codegen(const TypeClassIR &typeIr) {
+    return llvm::StructType::getTypeByName(*context, llvm::StringRef{typeIr.className})->getPointerTo();
+}
+
+llvm::Type* IRCodegenVisitor::codegen(const TypeVoidIR &typeIr) {
+    return llvm::Type::getVoidTy(*context);
+}
+
+llvm::Type* IRCodegenVisitor::codegen(const TypeBoolIR &typeIr) {
+    return llvm::Type::getInt1Ty(*context);
 }

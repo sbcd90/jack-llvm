@@ -8,3 +8,15 @@ llvm::Value* ExprIntegerIR::codegen(IRVisitor &visitor) {
 llvm::Value* ExprBinOpIR::codegen(IRVisitor &visitor) {
     return visitor.codegen(*this);
 }
+
+llvm::Value* ExprPrintfIR::codegen(IRVisitor &visitor) {
+    return visitor.codegen(*this);
+}
+
+llvm::Value* IdentifierVarIR::codegen(IRVisitor &visitor) {
+    return visitor.codegen(*this);
+}
+
+llvm::Value* IdentifierObjectVarIR::codegen(IRVisitor &visitor) {
+    return visitor.codegen(*this);
+}
