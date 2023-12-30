@@ -47,7 +47,7 @@ void IRCodegenVisitor::codegenProgram(const ProgramIR &program) {
     codegenFunctionProtos(program.funcDefinitions);
     codegenFunctionDefinitions(program.funcDefinitions);
     codegenMainExpr(program.mainExpr);
-//    runOptimizingPasses(program.funcDefinitions);
+    runOptimizingPasses(program.funcDefinitions);
 }
 
 void IRCodegenVisitor::codegenMainExpr(const std::vector<std::unique_ptr<ExprIR>> &mainExpr) {
@@ -198,4 +198,64 @@ llvm::Type* IRCodegenVisitor::codegen(const TypeVoidIR &typeIr) {
 
 llvm::Type* IRCodegenVisitor::codegen(const TypeBoolIR &typeIr) {
     return llvm::Type::getInt1Ty(*context);
+}
+
+llvm::Value* IRCodegenVisitor::codegen(const IdentifierVarIR &var) {
+    auto val = varEnv[var.varName];
+    if (val == nullptr) {
+        throw new IRCodegenException("Var not found: " + var.varName);
+    }
+    return val;
+}
+
+llvm::Value* IRCodegenVisitor::codegen(const IdentifierObjectVarIR &objField) {
+    auto objPtr = varEnv[objField.varName];
+    if (objPtr == nullptr) {
+        throw new IRCodegenException("Object not found: " + objField.varName);
+    }
+    return builder->CreateStructGEP(
+            objPtr->getAllocatedType()->getPointerElementType(),
+            builder->CreateLoad(objPtr->getAllocatedType()->getPointerElementType(), objPtr),
+            objField.fieldIndex + NUM_RESERVED_FIELDS);
+}
+
+llvm::Value* IRCodegenVisitor::codegen(const ExprAssignIR &expr) {
+    if (expr.assignedExpr == nullptr) {
+        throw new IRCodegenException("Assigning a null expr to " + expr.identifier->varName);
+    }
+    auto assignedVal = expr.assignedExpr->codegen(*this);
+    auto id = expr.identifier->codegen(*this);
+    if (id == nullptr) {
+        throw new IRCodegenException("Trying to assign to a null id: " + expr.identifier->varName);
+    }
+    builder->CreateStore(assignedVal, id);
+    return assignedVal;
+}
+
+llvm::Value* IRCodegenVisitor::codegen(const ExprIdentifierIR &expr) {
+    auto id = expr.identifier->codegen(*this);
+    if (id == nullptr) {
+        throw new IRCodegenException("Identifier not found: " + expr.identifier->varName);
+    }
+    auto type = id->getType();
+    auto idVal = builder->CreateLoad(type, id);
+    if (idVal == nullptr) {
+        throw new IRCodegenException("Identifier not loaded: " + expr.identifier->varName);
+    }
+    return idVal;
+}
+
+llvm::Value* IRCodegenVisitor::codegen(const ExprLetIR &expr) {
+    if (expr.boundExpr == nullptr) {
+        throw new IRCodegenException("Let - binding a null expr to " + expr.varName);
+    }
+    auto boundVal = expr.boundExpr->codegen(*this);
+    auto parentFunction = builder->GetInsertBlock()->getParent();
+
+    auto tmpBuilder = llvm::IRBuilder<>{&(parentFunction->getEntryBlock()),
+                                        parentFunction->getEntryBlock().begin()};
+    auto var = tmpBuilder.CreateAlloca(boundVal->getType(), nullptr, llvm::Twine(expr.varName));
+    varEnv[expr.varName] = var;
+    builder->CreateStore(boundVal, var);
+    return boundVal;
 }

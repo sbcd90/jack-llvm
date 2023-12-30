@@ -4,6 +4,7 @@
 
 #include <utility>
 
+#include "TypeIR.h"
 #include "llvm/IR/Value.h"
 
 class IRVisitor;
@@ -68,7 +69,21 @@ struct ExprAssignIR: public ExprIR {
     std::unique_ptr<ExprIR> assignedExpr;
     ExprAssignIR(std::unique_ptr<IdentifierIR> identifier, std::unique_ptr<ExprIR> assignedExpr):
         identifier(std::move(identifier)), assignedExpr(std::move(assignedExpr)) {}
-    virtual llvm::Value* codegen(IRVisitor &irVisitor) override;
+    virtual llvm::Value* codegen(IRVisitor &visitor) override;
+};
+
+struct ExprIdentifierIR: public ExprIR {
+    std::unique_ptr<IdentifierIR> identifier;
+    ExprIdentifierIR(std::unique_ptr<IdentifierIR> identifier): identifier(std::move(identifier)) {}
+    virtual llvm::Value* codegen(IRVisitor &visitor) override;
+};
+
+struct ExprLetIR: public ExprIR {
+    std::string varName;
+    std::unique_ptr<ExprIR> boundExpr;
+    ExprLetIR(const std::string &varName, std::unique_ptr<ExprIR> boundExpr):
+        varName(varName), boundExpr(std::move(boundExpr)) {}
+    virtual llvm::Value* codegen(IRVisitor &visitor) override;
 };
 
 #endif
