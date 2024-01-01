@@ -233,11 +233,11 @@ llvm::Value* IRCodegenVisitor::codegen(const ExprAssignIR &expr) {
 }
 
 llvm::Value* IRCodegenVisitor::codegen(const ExprIdentifierIR &expr) {
-    auto id = expr.identifier->codegen(*this);
+    auto id = reinterpret_cast<llvm::AllocaInst*>(expr.identifier->codegen(*this));
     if (id == nullptr) {
         throw new IRCodegenException("Identifier not found: " + expr.identifier->varName);
     }
-    auto type = id->getType();
+    auto type = id->getAllocatedType();
     auto idVal = builder->CreateLoad(type, id);
     if (idVal == nullptr) {
         throw new IRCodegenException("Identifier not loaded: " + expr.identifier->varName);
@@ -258,4 +258,25 @@ llvm::Value* IRCodegenVisitor::codegen(const ExprLetIR &expr) {
     varEnv[expr.varName] = var;
     builder->CreateStore(boundVal, var);
     return boundVal;
+}
+
+llvm::Value* IRCodegenVisitor::codegen(const ExprFunctionCallIR &expr) {
+    auto calleeFunction = module->getFunction(llvm::StringRef{expr.functionName});
+    if (calleeFunction == nullptr) {
+        throw new IRCodegenException("Function doesn't exist: " + expr.functionName);
+    }
+    auto calleeFunctionType = calleeFunction->getFunctionType();
+
+    std::vector<llvm::Value*> argValues{};
+    int size = expr.args.size();
+    for (int i = 0; i < size; ++i) {
+        auto argVal = expr.args[i]->codegen(*this);
+        if (argVal == nullptr) {
+            throw new IRCodegenException("Null Argument when calling function " + expr.functionName);
+        }
+        auto paramType = calleeFunctionType->getParamType(i);
+        auto bitCastArgVal = builder->CreateBitCast(argVal, paramType);
+        argValues.push_back(bitCastArgVal);
+    }
+    return builder->CreateCall(calleeFunction, argValues);
 }

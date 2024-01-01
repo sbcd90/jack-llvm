@@ -32,3 +32,7 @@ llvm::Value* ExprIdentifierIR::codegen(IRVisitor &visitor) {
 llvm::Value* ExprLetIR::codegen(IRVisitor &visitor) {
     return visitor.codegen(*this);
 }
+
+llvm::Value* ExprFunctionCallIR::codegen(IRVisitor &visitor) {
+    return visitor.codegen(*this);
+}

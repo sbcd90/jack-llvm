@@ -86,4 +86,12 @@ struct ExprLetIR: public ExprIR {
     virtual llvm::Value* codegen(IRVisitor &visitor) override;
 };
 
+struct ExprFunctionCallIR: public ExprIR {
+    std::string functionName;
+    std::vector<std::unique_ptr<ExprIR>> args;
+    ExprFunctionCallIR(std::string functionName, std::vector<std::unique_ptr<ExprIR>> args):
+        functionName(std::move(functionName)), args(std::move(args)) {}
+    virtual llvm::Value* codegen(IRVisitor &visitor) override;
+};
+
 #endif

@@ -47,6 +47,7 @@ public:
     virtual llvm::Value* codegen(const ExprAssignIR &expr) override;
     virtual llvm::Value* codegen(const ExprIdentifierIR &expr) override;
     virtual llvm::Value* codegen(const ExprLetIR &expr) override;
+    virtual llvm::Value* codegen(const ExprFunctionCallIR &expr) override;
 
     virtual llvm::Type* codegen(const TypeIntIR &typeIr) override;
     virtual llvm::Type* codegen(const TypeClassIR &typeIr) override;
