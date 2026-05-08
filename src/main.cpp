@@ -7,66 +7,101 @@ int main() {
     auto funcDefinitions = std::vector<std::unique_ptr<FunctionIR>>{};
     auto mainExpr = std::vector<std::unique_ptr<ExprIR>>{};
 
+//    /**
+//     * only main expr
+//     */
+//    auto exprIr1 = std::make_unique<ExprIntegerIR>(1);
+//    auto letExpr1 = std::make_unique<ExprLetIR>("x", std::move(exprIr1));
+//    auto exprIr2 = std::make_unique<ExprIntegerIR>(4);
+//    auto letExpr2 = std::make_unique<ExprLetIR>("y", std::move(exprIr2));
+//    auto exprIr4 = std::make_unique<ExprBinOpIR>(BinOpPlus, std::move(letExpr1), std::move(letExpr2));
+//    auto letExpr4 = std::make_unique<ExprLetIR>("z", std::move(exprIr4));
+//    mainExpr.push_back(std::move(letExpr4));
+//
+//    auto identifier = std::make_unique<IdentifierVarIR>("z");
+//    auto identifierExpr = std::make_unique<ExprIdentifierIR>(std::move(identifier));
+//    auto printfArgs = std::vector<std::unique_ptr<ExprIR>>{};
+//    printfArgs.push_back(std::move(identifierExpr));
+//
+//    auto exprIr = std::make_unique<ExprPrintfIR>("%d\n", std::move(printfArgs));
+//    mainExpr.push_back(std::move(exprIr));
+//
+//    /**
+//     * main expr calling a function
+//     */
+//     auto paramType1 = std::make_unique<TypeIntIR>();
+//     auto param1 = std::make_unique<ParameterIR>(std::move(paramType1), "x");
+//     auto paramType2 = std::make_unique<TypeIntIR>();
+//     auto param2 = std::make_unique<ParameterIR>(std::move(paramType2), "y");
+//     auto params = std::vector<std::unique_ptr<ParameterIR>>{};
+//     params.push_back(std::move(param1));
+//     params.push_back(std::move(param2));
+//
+//     auto returnType = std::make_unique<TypeIntIR>();
+//
+//     auto identifier1 = std::make_unique<IdentifierVarIR>("x");
+//     auto identifierExpr1 = std::make_unique<ExprIdentifierIR>(std::move(identifier1));
+//     auto identifier2 = std::make_unique<IdentifierVarIR>("y");
+//     auto identifierExpr2 = std::make_unique<ExprIdentifierIR>(std::move(identifier2));
+//    auto binOpExpr = std::make_unique<ExprBinOpIR>(BinOpPlus, std::move(identifierExpr1), std::move(identifierExpr2));
+//    auto bodyExpr = std::vector<std::unique_ptr<ExprIR>>{};
+//    bodyExpr.push_back(std::move(binOpExpr));
+//
+//    auto function = std::make_unique<FunctionIR>("add", std::move(returnType), std::move(params), std::move(bodyExpr));
+//    funcDefinitions.push_back(std::move(function));
+//
+//    auto param11 = std::make_unique<ExprIntegerIR>(1);
+//    auto param12 = std::make_unique<ExprIntegerIR>(7);
+//    auto paramsList = std::vector<std::unique_ptr<ExprIR>>{};
+//    paramsList.push_back(std::move(param11));
+//    paramsList.push_back(std::move(param12));
+//    auto functionCallee = std::make_unique<ExprFunctionCallIR>("add", std::move(paramsList));
+//
+//    auto letExpr5 = std::make_unique<ExprLetIR>("a", std::move(functionCallee));
+//    mainExpr.push_back(std::move(letExpr5));
+//
+//    auto identifier11 = std::make_unique<IdentifierVarIR>("a");
+//    auto identifierExpr11 = std::make_unique<ExprIdentifierIR>(std::move(identifier11));
+//    auto printfArgs1 = std::vector<std::unique_ptr<ExprIR>>{};
+//    printfArgs1.push_back(std::move(identifierExpr11));
+//
+//    auto exprIr11 = std::make_unique<ExprPrintfIR>("%d\n", std::move(printfArgs1));
+//    mainExpr.push_back(std::move(exprIr11));
+
     /**
-     * only main expr
+     * main expr calling a class method
      */
-    auto exprIr1 = std::make_unique<ExprIntegerIR>(1);
-    auto letExpr1 = std::make_unique<ExprLetIR>("x", std::move(exprIr1));
-    auto exprIr2 = std::make_unique<ExprIntegerIR>(4);
-    auto letExpr2 = std::make_unique<ExprLetIR>("y", std::move(exprIr2));
-    auto exprIr4 = std::make_unique<ExprBinOpIR>(BinOpPlus, std::move(letExpr1), std::move(letExpr2));
-    auto letExpr4 = std::make_unique<ExprLetIR>("z", std::move(exprIr4));
-    mainExpr.push_back(std::move(letExpr4));
+     auto paramType21 = std::make_unique<TypeIntIR>();
+     auto param21 = std::make_unique<ParameterIR>(std::move(paramType21), "x");
+     auto paramType22 = std::make_unique<TypeIntIR>();
+     auto param22 = std::make_unique<ParameterIR>(std::move(paramType22), "y");
+    auto params2 = std::vector<std:: unique_ptr<ParameterIR>>{};
+    params2.push_back(std::move(param21));
+    params2.push_back(std::move(param22));
+    auto returnType2 = std::make_unique<TypeIntIR>();
 
-    auto identifier = std::make_unique<IdentifierVarIR>("z");
-    auto identifierExpr = std::make_unique<ExprIdentifierIR>(std::move(identifier));
-    auto printfArgs = std::vector<std::unique_ptr<ExprIR>>{};
-    printfArgs.push_back(std::move(identifierExpr));
+    auto identifier21 = std::make_unique<IdentifierVarIR>("x");
+    auto identifierExpr21 = std::make_unique<ExprIdentifierIR>(std::move(identifier21));
+    auto identifier22 = std::make_unique<IdentifierVarIR>("y");
+    auto identifierExpr22 = std::make_unique<ExprIdentifierIR>(std::move(identifier22));
 
-    auto exprIr = std::make_unique<ExprPrintfIR>("%d\n", std::move(printfArgs));
-    mainExpr.push_back(std::move(exprIr));
+    auto binOpExpr2 = std::make_unique<ExprBinOpIR>(BinOpPlus, std::move(identifierExpr21), std::move(identifierExpr22));
+    auto bodyExpr2 = std::vector<std::unique_ptr<ExprIR>>{};
+    bodyExpr2.push_back(std::move(binOpExpr2));
 
-    /**
-     * main expr calling a function
-     */
-     auto paramType1 = std::make_unique<TypeIntIR>();
-     auto param1 = std::make_unique<ParameterIR>(std::move(paramType1), "x");
-     auto paramType2 = std::make_unique<TypeIntIR>();
-     auto param2 = std::make_unique<ParameterIR>(std::move(paramType2), "y");
-     auto params = std::vector<std::unique_ptr<ParameterIR>>{};
-     params.push_back(std::move(param1));
-     params.push_back(std::move(param2));
+    auto function2 = std::make_unique<FunctionIR>("add2", std::move(returnType2), std::move(params2), std::move(bodyExpr2));
+    funcDefinitions.push_back(std::move(function2));
 
-     auto returnType = std::make_unique<TypeIntIR>();
+    auto paramClassType1 = std::make_unique<TypeIntIR>();
+    auto paramClassType2 = std::make_unique<TypeIntIR>();
+    auto paramClassTypes = std::vector<std::unique_ptr<TypeIR>>{};
+    paramClassTypes.push_back(std::move(paramClassType1));
+    paramClassTypes.push_back(std::move(paramClassType2));
 
-     auto identifier1 = std::make_unique<IdentifierVarIR>("x");
-     auto identifierExpr1 = std::make_unique<ExprIdentifierIR>(std::move(identifier1));
-     auto identifier2 = std::make_unique<IdentifierVarIR>("y");
-     auto identifierExpr2 = std::make_unique<ExprIdentifierIR>(std::move(identifier2));
-    auto binOpExpr = std::make_unique<ExprBinOpIR>(BinOpPlus, std::move(identifierExpr1), std::move(identifierExpr2));
-    auto bodyExpr = std::vector<std::unique_ptr<ExprIR>>{};
-    bodyExpr.push_back(std::move(binOpExpr));
+    auto classDefinition = std::make_unique<ClassIR>(std::string{"Class1"}, std::move(paramClassTypes), std::vector<std::string>{"add2"});
+    classDefinitions.push_back(std::move(classDefinition));
 
-    auto function = std::make_unique<FunctionIR>("add", std::move(returnType), std::move(params), std::move(bodyExpr));
-    funcDefinitions.push_back(std::move(function));
-
-    auto param11 = std::make_unique<ExprIntegerIR>(1);
-    auto param12 = std::make_unique<ExprIntegerIR>(7);
-    auto paramsList = std::vector<std::unique_ptr<ExprIR>>{};
-    paramsList.push_back(std::move(param11));
-    paramsList.push_back(std::move(param12));
-    auto functionCallee = std::make_unique<ExprFunctionCallIR>("add", std::move(paramsList));
-
-    auto letExpr5 = std::make_unique<ExprLetIR>("a", std::move(functionCallee));
-    mainExpr.push_back(std::move(letExpr5));
-
-    auto identifier11 = std::make_unique<IdentifierVarIR>("a");
-    auto identifierExpr11 = std::make_unique<ExprIdentifierIR>(std::move(identifier11));
-    auto printfArgs1 = std::vector<std::unique_ptr<ExprIR>>{};
-    printfArgs1.push_back(std::move(identifierExpr11));
-
-    auto exprIr11 = std::make_unique<ExprPrintfIR>("%d\n", std::move(printfArgs1));
-    mainExpr.push_back(std::move(exprIr11));
+    auto identifierClass21 = std::make_unique<IdentifierObjectVarIR>("class1", "Class1", 0);
 
     auto programIr = ProgramIR{std::move(classDefinitions), std::move(funcDefinitions), std::move(mainExpr)};
     codegen->codegenProgram(programIr);

@@ -10,7 +10,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/IR/DerivedTypes.h"
-#include "llvm/Support/Host.h"
+#include "llvm/TargetParser/Host.h"
 #include "llvm/Transforms/InstCombine/InstCombine.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Scalar/GVN.h"
@@ -21,6 +21,10 @@ IRCodegenVisitor::IRCodegenVisitor() {
     this->module = std::make_unique<llvm::Module>("Module", *context);
     this->builder = std::make_unique<llvm::IRBuilder<>>(*context);
     this->varEnv = std::map<std::string, llvm::AllocaInst*>{};
+}
+
+IRCodegenVisitor::~IRCodegenVisitor() {
+
 }
 
 void IRCodegenVisitor::dumpLLVMIR() {
@@ -45,6 +49,7 @@ void IRCodegenVisitor::codegenProgram(const ProgramIR &program) {
     codegenExternFunctionDeclarations();
     codegenClasses(program.classDefinitions);
     codegenFunctionProtos(program.funcDefinitions);
+    codegenVTables(program.classDefinitions);
     codegenFunctionDefinitions(program.funcDefinitions);
     codegenMainExpr(program.mainExpr);
     runOptimizingPasses(program.funcDefinitions);
@@ -75,13 +80,50 @@ void IRCodegenVisitor::codegenExternFunctionDeclarations() {
 }
 
 void IRCodegenVisitor::codegenClasses(const std::vector<std::unique_ptr<ClassIR>> &classes) {
+//    for (auto &currClass: classes) {
+//        auto classType = llvm::StructType::getTypeByName(*context, llvm::StringRef(currClass->className));
+//        std::vector<llvm::Type*> bodyTypes{};
+//        for (auto &field: currClass->fields) {
+//            bodyTypes.push_back(field->codegen(*this));
+//        }
+//        classType->setBody(llvm::ArrayRef<llvm::Type*>(bodyTypes));
+//    }
     for (auto &currClass: classes) {
-        auto classType = llvm::StructType::getTypeByName(*context, llvm::StringRef(currClass->className));
-        std::vector<llvm::Type*> bodyTypes{};
+        llvm::StructType::create(*context, llvm::StringRef(currClass->className));
+        llvm::StructType::create(*context, llvm::StringRef("_Vtable" + currClass->className));
+    }
+
+    for (auto &currClass: classes) {
+        llvm::StructType *classType = llvm::StructType::getTypeByName(*context,
+                                                                      llvm::StringRef(currClass->className));
+        llvm::Type *vTablePtrTy = llvm::StructType::getTypeByName(*context,
+                                                                  llvm::StringRef("_Vtable" + currClass->className));
+        std::vector<llvm::Type*> bodyTypes({vTablePtrTy, llvm::Type::getInt32Ty(*context),
+                                            llvm::Type::getInt32Ty(*context)});
         for (auto &field: currClass->fields) {
             bodyTypes.push_back(field->codegen(*this));
         }
         classType->setBody(llvm::ArrayRef<llvm::Type*>(bodyTypes));
+    }
+}
+
+void IRCodegenVisitor::codegenVTables(const std::vector<std::unique_ptr<ClassIR>> &classes) {
+    for (auto &currClass: classes) {
+        std::string vTableName = "_Vtable" + currClass->className;
+        llvm::StructType *vTableType = llvm::StructType::getTypeByName(*context,
+                                                                       llvm::StringRef(vTableName));
+        std::vector<llvm::Constant*> vTableMethods;
+        std::vector<llvm::Type*> vTableMethodTypes;
+
+        for (auto &methodName: currClass->vTable) {
+            llvm::Function *method = module->getFunction(llvm::StringRef(methodName));
+            vTableMethods.push_back(method);
+            vTableMethodTypes.push_back(method->getType());
+        }
+        vTableType->setBody(vTableMethodTypes);
+        module->getOrInsertGlobal(vTableName, vTableType);
+        llvm::GlobalVariable *vTable = module->getNamedGlobal(vTableName);
+        vTable->setInitializer(llvm::ConstantStruct::get(vTableType, vTableMethods));
     }
 }
 
@@ -214,8 +256,8 @@ llvm::Value* IRCodegenVisitor::codegen(const IdentifierObjectVarIR &objField) {
         throw new IRCodegenException("Object not found: " + objField.varName);
     }
     return builder->CreateStructGEP(
-            objPtr->getAllocatedType()->getPointerElementType(),
-            builder->CreateLoad(objPtr->getAllocatedType()->getPointerElementType(), objPtr),
+            objPtr->getAllocatedType(),
+            builder->CreateLoad(objPtr->getAllocatedType(), objPtr),
             objField.fieldIndex + NUM_RESERVED_FIELDS);
 }
 

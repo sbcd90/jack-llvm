@@ -21,6 +21,7 @@ protected:
     std::map<std::string, llvm::AllocaInst*> varEnv;
 public:
     IRCodegenVisitor();
+    ~IRCodegenVisitor();
 
     void configureTarget();
     void runOptimizingPasses(const std::vector<std::unique_ptr<FunctionIR>> &functions);
@@ -33,6 +34,7 @@ public:
     void codegenExternFunctionDeclarations();
 
     void codegenClasses(const std::vector<std::unique_ptr<ClassIR>> &classes);
+    void codegenVTables(const std::vector<std::unique_ptr<ClassIR>> &classes);
 
     llvm::FunctionType* codegenFunctionType(const FunctionIR &function);
     void codegenFunctionProtos(const std::vector<std::unique_ptr<FunctionIR>> &functions);
