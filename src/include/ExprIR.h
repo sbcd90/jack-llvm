@@ -40,6 +40,13 @@ struct ExprIR {
     virtual llvm::Value* codegen(IRVisitor &irVisitor)  = 0;
 };
 
+struct ConstructorArgIR {
+    int fieldIndex;
+    std::unique_ptr<ExprIR> argument;
+    ConstructorArgIR(int fieldIndex, std:: unique_ptr<ExprIR> argument):
+        fieldIndex(fieldIndex), argument(std::move(argument)) {}
+};
+
 struct ExprIntegerIR: public ExprIR {
     int val;
     ExprIntegerIR(const int &i): val(i) {}
@@ -78,6 +85,14 @@ struct ExprIdentifierIR: public ExprIR {
     virtual llvm::Value* codegen(IRVisitor &visitor) override;
 };
 
+struct ExprConstructorIR: public ExprIR {
+    std::string className;
+    std::vector<std::unique_ptr<ConstructorArgIR>> constructorArgs;
+    ExprConstructorIR(const std::string &className, std::vector<std::unique_ptr<ConstructorArgIR>> constructorArgs):
+        className(className), constructorArgs(std::move(constructorArgs)) {}
+    virtual llvm::Value* codegen(IRVisitor &visitor) override;
+};
+
 struct ExprLetIR: public ExprIR {
     std::string varName;
     std::unique_ptr<ExprIR> boundExpr;
@@ -91,6 +106,17 @@ struct ExprFunctionCallIR: public ExprIR {
     std::vector<std::unique_ptr<ExprIR>> args;
     ExprFunctionCallIR(std::string functionName, std::vector<std::unique_ptr<ExprIR>> args):
         functionName(std::move(functionName)), args(std::move(args)) {}
+    virtual llvm::Value* codegen(IRVisitor &visitor) override;
+};
+
+struct ExprMethodAppIR: public ExprIR {
+    std::string objName;
+    std::string objStaticMethodName;
+    int methodIndex;
+    std::vector<std::unique_ptr<ExprIR>> arguments;
+    ExprMethodAppIR(const std::string &objName, const std::string &objStaticMethodName, int methodIndex,
+                    std::vector<std::unique_ptr<ExprIR>> arguments): objName(objName), objStaticMethodName(objStaticMethodName),
+                    methodIndex(methodIndex), arguments(std::move(arguments)) {}
     virtual llvm::Value* codegen(IRVisitor &visitor) override;
 };
 

@@ -77,17 +77,13 @@ void IRCodegenVisitor::codegenExternFunctionDeclarations() {
                                 llvm::FunctionType::get(llvm::IntegerType::getInt32Ty(*context),
                                                         llvm::Type::getInt8Ty(*context)->getPointerTo(),
                                                         true));
+    llvm::Type *voidPtrTy = llvm::Type::getInt8Ty(*context)->getPointerTo();
+    module->getOrInsertFunction("GC_malloc", llvm::FunctionType::get(voidPtrTy,
+                                                                     llvm::IntegerType::getInt64Ty(*context),
+                                                                     false));
 }
 
 void IRCodegenVisitor::codegenClasses(const std::vector<std::unique_ptr<ClassIR>> &classes) {
-//    for (auto &currClass: classes) {
-//        auto classType = llvm::StructType::getTypeByName(*context, llvm::StringRef(currClass->className));
-//        std::vector<llvm::Type*> bodyTypes{};
-//        for (auto &field: currClass->fields) {
-//            bodyTypes.push_back(field->codegen(*this));
-//        }
-//        classType->setBody(llvm::ArrayRef<llvm::Type*>(bodyTypes));
-//    }
     for (auto &currClass: classes) {
         llvm::StructType::create(*context, llvm::StringRef(currClass->className));
         llvm::StructType::create(*context, llvm::StringRef("_Vtable" + currClass->className));
@@ -98,8 +94,7 @@ void IRCodegenVisitor::codegenClasses(const std::vector<std::unique_ptr<ClassIR>
                                                                       llvm::StringRef(currClass->className));
         llvm::Type *vTablePtrTy = llvm::StructType::getTypeByName(*context,
                                                                   llvm::StringRef("_Vtable" + currClass->className));
-        std::vector<llvm::Type*> bodyTypes({vTablePtrTy, llvm::Type::getInt32Ty(*context),
-                                            llvm::Type::getInt32Ty(*context)});
+        std::vector<llvm::Type*> bodyTypes({vTablePtrTy});
         for (auto &field: currClass->fields) {
             bodyTypes.push_back(field->codegen(*this));
         }
@@ -287,6 +282,37 @@ llvm::Value* IRCodegenVisitor::codegen(const ExprIdentifierIR &expr) {
     return idVal;
 }
 
+llvm::Value* IRCodegenVisitor::codegen(const ExprConstructorIR &constructorIr) {
+    llvm::Type *objType = llvm::StructType::getTypeByName(*context,
+                                                          llvm::StringRef(constructorIr.className));
+    llvm::Value *objDummyPtr = builder->CreateGEP(objType,llvm::ConstantPointerNull::get(objType->getPointerTo()),
+                       llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context), 1),"objsize");
+    llvm::Value *objSize = builder->CreatePointerCast(objDummyPtr, llvm::Type::getInt64Ty(*context));
+
+    llvm::Value *objVoidPtr = builder->CreateCall(module->getFunction("GC_malloc"), objSize);
+    llvm::Value *obj = builder->CreatePointerCast(objVoidPtr, objType->getPointerTo());
+
+    std::string vTableName = "_Vtable" + constructorIr.className;
+    llvm::Value *vTableField = builder->CreateStructGEP(objType, obj, 0);
+    llvm::Value *vTable = module->getNamedGlobal(vTableName);
+    if (vTable == nullptr) {
+        throw new IRCodegenException(std::string("Can't get vTable: " + vTableName));
+    }
+    builder->CreateStore(vTable, vTableField);
+
+    for (auto &arg: constructorIr.constructorArgs) {
+        if (arg == nullptr || arg->argument == nullptr) {
+            throw new IRCodegenException(
+                    std::string("Null constructor arg for " + constructorIr.className));
+        }
+        llvm::Value *argValue = arg->argument->codegen(*this);
+        llvm::Value *field = builder->CreateStructGEP(
+                objType, obj, arg->fieldIndex + NUM_RESERVED_FIELDS);
+        builder->CreateStore(argValue, field);
+    }
+    return obj;
+}
+
 llvm::Value* IRCodegenVisitor::codegen(const ExprLetIR &expr) {
     if (expr.boundExpr == nullptr) {
         throw new IRCodegenException("Let - binding a null expr to " + expr.varName);
@@ -321,4 +347,8 @@ llvm::Value* IRCodegenVisitor::codegen(const ExprFunctionCallIR &expr) {
         argValues.push_back(bitCastArgVal);
     }
     return builder->CreateCall(calleeFunction, argValues);
+}
+
+llvm::Value* IRCodegenVisitor::codegen(const ExprMethodAppIR &expr) {
+    
 }

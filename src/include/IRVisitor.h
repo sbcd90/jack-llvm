@@ -19,7 +19,9 @@ public:
     virtual llvm::Value* codegen(const IdentifierObjectVarIR &exprIr) = 0;
     virtual llvm::Value* codegen(const ExprAssignIR &exprIr) = 0;
     virtual llvm::Value* codegen(const ExprIdentifierIR &exprIr) = 0;
+    virtual llvm::Value* codegen(const ExprConstructorIR &exprIr) = 0;
     virtual llvm::Value* codegen(const ExprLetIR &exprIr) = 0;
     virtual llvm::Value* codegen(const ExprFunctionCallIR &exprIr) = 0;
+    virtual llvm::Value* codegen(const ExprMethodAppIR &exprIr) = 0;
 };
 #endif // IR_VISITOR_H_

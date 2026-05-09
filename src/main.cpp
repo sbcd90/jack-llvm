@@ -101,7 +101,9 @@ int main() {
     auto classDefinition = std::make_unique<ClassIR>(std::string{"Class1"}, std::move(paramClassTypes), std::vector<std::string>{"add2"});
     classDefinitions.push_back(std::move(classDefinition));
 
-    auto identifierClass21 = std::make_unique<IdentifierObjectVarIR>("class1", "Class1", 0);
+    auto constructorExpr = std::make_unique<ExprConstructorIR>(std::string {"Class1"}, std::vector<std::unique_ptr<ConstructorArgIR>>{});
+    auto letExpr2 = std::make_unique<ExprLetIR>("class1", std::move(constructorExpr));
+    mainExpr.push_back(std::move(letExpr2));
 
     auto programIr = ProgramIR{std::move(classDefinitions), std::move(funcDefinitions), std::move(mainExpr)};
     codegen->codegenProgram(programIr);

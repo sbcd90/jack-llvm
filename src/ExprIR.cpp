@@ -29,10 +29,18 @@ llvm::Value* ExprIdentifierIR::codegen(IRVisitor &visitor) {
     return visitor.codegen(*this);
 }
 
+llvm::Value* ExprConstructorIR::codegen(IRVisitor &visitor) {
+    return visitor.codegen(*this);
+}
+
 llvm::Value* ExprLetIR::codegen(IRVisitor &visitor) {
     return visitor.codegen(*this);
 }
 
 llvm::Value* ExprFunctionCallIR::codegen(IRVisitor &visitor) {
+    return visitor.codegen(*this);
+}
+
+llvm::Value* ExprMethodAppIR::codegen(IRVisitor &visitor) {
     return visitor.codegen(*this);
 }

@@ -42,6 +42,7 @@ public:
     void codegenFunctionDefinitions(const std::vector<std::unique_ptr<FunctionIR>> &functions);
 
     virtual llvm::Value* codegen(const ExprIntegerIR &exprIr);
+    virtual llvm::Value* codegen(const ExprConstructorIR &constructorIr);
     virtual llvm::Value* codegen(const ExprBinOpIR &exprIr);
     virtual llvm::Value* codegen(const ExprPrintfIR &exprIr);
     virtual llvm::Value* codegen(const IdentifierVarIR &var) override;
@@ -50,6 +51,7 @@ public:
     virtual llvm::Value* codegen(const ExprIdentifierIR &expr) override;
     virtual llvm::Value* codegen(const ExprLetIR &expr) override;
     virtual llvm::Value* codegen(const ExprFunctionCallIR &expr) override;
+    virtual llvm::Value* codegen(const ExprMethodAppIR &expr) override;
 
     virtual llvm::Type* codegen(const TypeIntIR &typeIr) override;
     virtual llvm::Type* codegen(const TypeClassIR &typeIr) override;
