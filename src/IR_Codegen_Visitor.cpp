@@ -174,22 +174,29 @@ void IRCodegenVisitor::codegenFunctionDefinitions(const std::vector<std::unique_
 }
 
 void IRCodegenVisitor::runOptimizingPasses(const std::vector<std::unique_ptr<FunctionIR>> &functions) {
-    auto functionPassManager = std::make_unique<llvm::legacy::FunctionPassManager>(module.get());
-    functionPassManager->add(llvm::createPromoteMemoryToRegisterPass());
-    functionPassManager->add(llvm::createInstructionCombiningPass());
-    functionPassManager->add(llvm::createReassociatePass());
-    functionPassManager->add(llvm::createGVNPass());
-    functionPassManager->add(llvm::createCFGSimplificationPass());
+    try {
+        auto functionPassManager = std::make_unique<llvm::legacy::FunctionPassManager>(module.get());
+        functionPassManager->add(llvm::createPromoteMemoryToRegisterPass());
+        functionPassManager->add(llvm::createInstructionCombiningPass());
+        functionPassManager->add(llvm::createReassociatePass());
+        functionPassManager->add(llvm::createGVNPass());
+        functionPassManager->add(llvm::createCFGSimplificationPass());
 
-    functionPassManager->doInitialization();
+        functionPassManager->doInitialization();
 
-    for (auto &function: functions) {
-        auto llvmFun = module->getFunction(llvm::StringRef(function->functionName));
-        functionPassManager->run(*llvmFun);
+        for (auto &function: functions) {
+            auto llvmFun = module->getFunction(llvm::StringRef(function->functionName));
+            functionPassManager->run(*llvmFun);
+        }
+
+        auto llvmMainFun = module->getFunction(llvm::StringRef("main"));
+        functionPassManager->run(*llvmMainFun);
+    } catch (const std::exception &e) {
+        llvm::errs() << "Optimization pass error: "
+                     << e.what() << "\n";
+    } catch (...) {
+        llvm::errs() << "Unknown optimization pass error\n";
     }
-
-    auto llvmMainFun = module->getFunction(llvm::StringRef("main"));
-    functionPassManager->run(*llvmMainFun);
 }
 
 llvm::Value* IRCodegenVisitor::codegen(const ExprIntegerIR &exprIr) {
