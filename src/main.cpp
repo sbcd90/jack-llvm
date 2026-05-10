@@ -71,11 +71,14 @@ int main() {
     /**
      * main expr calling a class method
      */
+     auto paramType20 = std::make_unique<TypeClassIR>("Class1");
+     auto param20 = std::make_unique<ParameterIR>(std::move(paramType20), "this");
      auto paramType21 = std::make_unique<TypeIntIR>();
      auto param21 = std::make_unique<ParameterIR>(std::move(paramType21), "x");
      auto paramType22 = std::make_unique<TypeIntIR>();
      auto param22 = std::make_unique<ParameterIR>(std::move(paramType22), "y");
     auto params2 = std::vector<std:: unique_ptr<ParameterIR>>{};
+    params2.push_back(std::move(param20));
     params2.push_back(std::move(param21));
     params2.push_back(std::move(param22));
     auto returnType2 = std::make_unique<TypeIntIR>();
@@ -104,6 +107,22 @@ int main() {
     auto constructorExpr = std::make_unique<ExprConstructorIR>(std::string {"Class1"}, std::vector<std::unique_ptr<ConstructorArgIR>>{});
     auto letExpr2 = std::make_unique<ExprLetIR>("class1", std::move(constructorExpr));
     mainExpr.push_back(std::move(letExpr2));
+
+    auto exprInt21 = std::make_unique<ExprIntegerIR>(1);
+    auto exprInt22 = std::make_unique<ExprIntegerIR>(5);
+    auto exprInts2 = std::vector<std::unique_ptr<ExprIR>>{};
+    exprInts2.push_back(std::move(exprInt21));
+    exprInts2.push_back(std::move(exprInt22));
+    auto methodExpr = std::make_unique<ExprMethodAppIR>("class1", "add2", 0, std::move(exprInts2));
+    auto letExpr4 = std::make_unique<ExprLetIR>("add2", std::move(methodExpr));
+    mainExpr.push_back(std::move(letExpr4));
+
+    auto identifier41 = std::make_unique<IdentifierVarIR>("add2");
+    auto identifierExpr41 = std::make_unique<ExprIdentifierIR>(std::move(identifier41));
+    auto printfArgs4 = std::vector<std::unique_ptr<ExprIR>>{};
+    printfArgs4.push_back(std::move(identifierExpr41));
+    auto exprIr41 = std::make_unique<ExprPrintfIR>("%d\n", std::move(printfArgs4));
+    mainExpr.push_back(std::move(exprIr41));
 
     auto programIr = ProgramIR{std::move(classDefinitions), std::move(funcDefinitions), std::move(mainExpr)};
     codegen->codegenProgram(programIr);

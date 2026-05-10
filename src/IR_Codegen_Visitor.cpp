@@ -1,5 +1,6 @@
 #include "IR_Codegen_Visitor.h"
 
+#include <iostream>
 #include <memory>
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
@@ -350,5 +351,34 @@ llvm::Value* IRCodegenVisitor::codegen(const ExprFunctionCallIR &expr) {
 }
 
 llvm::Value* IRCodegenVisitor::codegen(const ExprMethodAppIR &expr) {
-    
+    llvm::Value *thisObj = builder->CreateLoad(varEnv[expr.objName]->getType()->getPointerTo(),
+                                               varEnv[expr.objName], expr.objName);
+    if (thisObj == nullptr) {
+        throw new IRCodegenException(std::string("Method called on null object"));
+    }
+
+    llvm::Value *vTableFieldPtr = builder->CreateStructGEP(thisObj->getType()->getPointerTo(),
+                                                           thisObj, 0);
+    llvm::Value *vTablePtr = builder->CreateLoad(thisObj->getType(), vTableFieldPtr);
+    llvm::Value *calleeMethodPtr = builder->CreateStructGEP(vTablePtr->getType()->getPointerTo(),
+                                                            vTablePtr, expr.methodIndex);
+    llvm::Value *calleeMethod = builder->CreateLoad(calleeMethodPtr->getType()->getPointerTo(),
+                                                    calleeMethodPtr);
+    if (calleeMethod == nullptr) {
+        throw new IRCodegenException(std::string("Method doesn't exist: " + expr.objName + "->" +
+                                                 std::to_string(expr.methodIndex)));
+    }
+    llvm::FunctionType *calleeMethodType = module->getFunction(llvm::StringRef(expr.objStaticMethodName))->getFunctionType();
+    llvm::Value *thisArg = builder->CreateBitCast(thisObj, calleeMethodType->getParamType(0));
+    auto argVals = std::vector<llvm::Value*>{thisArg};
+
+    for (int i = 0;i < expr.arguments.size(); i++) {
+        llvm::Value *argVal = expr.arguments[i]->codegen(*this);
+        if (argVal == nullptr) {
+            throw new IRCodegenException(std::string("Null Argument when calling method " + expr.objName +
+                                                     "->" + std::to_string(expr.methodIndex)));
+        }
+        argVals.push_back(argVal);
+    }
+    return builder->CreateCall(calleeMethodType, calleeMethod, argVals);
 }
