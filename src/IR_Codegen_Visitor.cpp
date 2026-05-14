@@ -21,7 +21,7 @@ IRCodegenVisitor::IRCodegenVisitor() {
     this->context = std::make_unique<llvm::LLVMContext>();
     this->module = std::make_unique<llvm::Module>("Module", *context);
     this->builder = std::make_unique<llvm::IRBuilder<>>(*context);
-    this->varEnv = std::map<std::string, llvm::AllocaInst*>{};
+    this->varEnv = std::map<std::string, llvm::Value*>{};
 }
 
 IRCodegenVisitor::~IRCodegenVisitor() {
@@ -88,6 +88,7 @@ void IRCodegenVisitor::codegenClasses(const std::vector<std::unique_ptr<ClassIR>
     for (auto &currClass: classes) {
         llvm::StructType::create(*context, llvm::StringRef(currClass->className));
         llvm::StructType::create(*context, llvm::StringRef("_Vtable" + currClass->className));
+        classEnv[currClass->className] = currClass.get();
     }
 
     for (auto &currClass: classes) {
@@ -97,7 +98,7 @@ void IRCodegenVisitor::codegenClasses(const std::vector<std::unique_ptr<ClassIR>
                                                                   llvm::StringRef("_Vtable" + currClass->className));
         std::vector<llvm::Type*> bodyTypes({vTablePtrTy});
         for (auto &field: currClass->fields) {
-            bodyTypes.push_back(field->codegen(*this));
+            bodyTypes.push_back(field->fieldType->codegen(*this));
         }
         classType->setBody(llvm::ArrayRef<llvm::Type*>(bodyTypes));
     }
@@ -152,6 +153,24 @@ void IRCodegenVisitor::codegenFunctionDefinition(const FunctionIR &function) {
         auto paramType = llvmFunction->getFunctionType()->getParamType(paramNo);
         varEnv[paramName] = builder->CreateAlloca(paramType, nullptr, llvm::Twine(paramName));
         builder->CreateStore(&param, varEnv[paramName]);
+    }
+
+    if (!function.params.empty() && function.params[0]->paramName == "this") {
+        auto classTypeIR = dynamic_cast<TypeClassIR*>(function.params[0]->paramType.get());
+        auto className = classTypeIR->className;
+
+        auto classIR = classEnv[className];
+        auto llvmClassType = llvm::StructType::getTypeByName(*context, llvm::StringRef(className));
+
+        auto thisAlloca = varEnv["this"];
+        auto thisPtr = builder->CreateLoad(thisAlloca->getType()->getPointerTo(), thisAlloca);
+
+        int fieldIndex = 1;
+        for (auto &field: classIR->fields) {
+            auto fieldPtr = builder->CreateStructGEP(llvmClassType, thisPtr, fieldIndex);
+            varEnv[field->fieldName] = fieldPtr;
+            fieldIndex++;
+        }
     }
 
     llvm::Value* returnValue;
@@ -254,14 +273,14 @@ llvm::Value* IRCodegenVisitor::codegen(const IdentifierVarIR &var) {
 }
 
 llvm::Value* IRCodegenVisitor::codegen(const IdentifierObjectVarIR &objField) {
-    auto objPtr = varEnv[objField.varName];
-    if (objPtr == nullptr) {
-        throw new IRCodegenException("Object not found: " + objField.varName);
-    }
-    return builder->CreateStructGEP(
-            objPtr->getAllocatedType(),
-            builder->CreateLoad(objPtr->getAllocatedType(), objPtr),
-            objField.fieldIndex + NUM_RESERVED_FIELDS);
+//    auto objPtr = varEnv[objField.varName];
+//    if (objPtr == nullptr) {
+//        throw new IRCodegenException("Object not found: " + objField.varName);
+//    }
+//    return builder->CreateStructGEP(
+//            objPtr->getAllocatedType(),
+//            builder->CreateLoad(objPtr->getAllocatedType(), objPtr),
+//            objField.fieldIndex + NUM_RESERVED_FIELDS);
 }
 
 llvm::Value* IRCodegenVisitor::codegen(const ExprAssignIR &expr) {

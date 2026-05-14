@@ -119,16 +119,44 @@ int main() {
     auto function4 = std::make_unique<FunctionIR>("add4", std::move(returnType4), std::move(params4), std::move(bodyExpr4));
     funcDefinitions.push_back(std::move(function4));
 
+    auto paramType50 = std::make_unique<TypeClassIR>("Class1");
+    auto param50 = std::make_unique<ParameterIR>(std::move(paramType50), "this");
+    auto params5 = std::vector<std:: unique_ptr<ParameterIR>>{};
+    params5.push_back(std::move(param50));
+    auto returnType5 = std::make_unique<TypeIntIR>();
+
+    auto identifier51 = std::make_unique<IdentifierVarIR>("a");
+    auto identifierExpr51 = std::make_unique<ExprIdentifierIR>(std::move(identifier51));
+    auto identifier52 = std::make_unique<IdentifierVarIR>("b");
+    auto identifierExpr52 = std::make_unique<ExprIdentifierIR>(std::move(identifier52));
+
+    auto binOpExpr5 = std::make_unique<ExprBinOpIR>(BinOpPlus, std::move(identifierExpr51), std::move(identifierExpr52));
+    auto bodyExpr5 = std::vector<std::unique_ptr<ExprIR>>{};
+    bodyExpr5.push_back(std::move(binOpExpr5));
+
+    auto function5 = std::make_unique<FunctionIR>("add5", std::move(returnType5), std::move(params5), std::move(bodyExpr5));
+    funcDefinitions.push_back(std::move(function5));
+
     auto paramClassType1 = std::make_unique<TypeIntIR>();
     auto paramClassType2 = std::make_unique<TypeIntIR>();
-    auto paramClassTypes = std::vector<std::unique_ptr<TypeIR>>{};
-    paramClassTypes.push_back(std::move(paramClassType1));
-    paramClassTypes.push_back(std::move(paramClassType2));
+    auto paramClassTypes = std::vector<std::unique_ptr<FieldIR>>{};
+
+    auto field1 = std::make_unique<FieldIR>(std::move(paramClassType1), "a");
+    paramClassTypes.push_back(std::move(field1));
+    auto field2 = std::make_unique<FieldIR>(std::move(paramClassType2), "b");
+    paramClassTypes.push_back(std::move(field2));
 
     auto classDefinition = std::make_unique<ClassIR>(std::string{"Class1"}, std::move(paramClassTypes), std::vector<std::string>{"add2"});
     classDefinitions.push_back(std::move(classDefinition));
 
-    auto constructorExpr = std::make_unique<ExprConstructorIR>(std::string {"Class1"}, std::vector<std::unique_ptr<ConstructorArgIR>>{});
+    auto constructorExprArg1 = std::make_unique<ExprIntegerIR>(4);
+    auto constructorArg1 = std::make_unique<ConstructorArgIR>(0, std::move(constructorExprArg1));
+    auto constructorExprArg2 = std::make_unique<ExprIntegerIR>(5);
+    auto constructorArg2 = std::make_unique<ConstructorArgIR>(1, std::move(constructorExprArg2));
+    auto constructorArgs1 = std::vector<std::unique_ptr<ConstructorArgIR>>{};
+    constructorArgs1.push_back(std::move(constructorArg1));
+    constructorArgs1.push_back(std::move(constructorArg2));
+    auto constructorExpr = std::make_unique<ExprConstructorIR>(std::string {"Class1"}, std::move(constructorArgs1));
     auto letExpr2 = std::make_unique<ExprLetIR>("class1", std::move(constructorExpr));
     mainExpr.push_back(std::move(letExpr2));
 
@@ -163,6 +191,17 @@ int main() {
     printfArgs41.push_back(std::move(identifierExpr412));
     auto exprIr411 = std::make_unique<ExprPrintfIR>("%d\n", std::move(printfArgs41));
     mainExpr.push_back(std::move(exprIr411));
+
+    auto methodExpr5 = std::make_unique<ExprMethodAppIR>("class1", "add5", 0, std::vector<std::unique_ptr<ExprIR>>{});
+    auto letExpr51 = std::make_unique<ExprLetIR>("add5", std::move(methodExpr5));
+    mainExpr.push_back(std::move(letExpr51));
+
+    auto identifier512 = std::make_unique<IdentifierVarIR>("add5");
+    auto identifierExpr512 = std::make_unique<ExprIdentifierIR>(std::move(identifier512));
+    auto printfArgs51 = std::vector<std::unique_ptr<ExprIR>>{};
+    printfArgs51.push_back(std::move(identifierExpr512));
+    auto exprIr511 = std::make_unique<ExprPrintfIR>("%d\n", std::move(printfArgs51));
+    mainExpr.push_back(std::move(exprIr511));
 
     auto programIr = ProgramIR{std::move(classDefinitions), std::move(funcDefinitions), std::move(mainExpr)};
     codegen->codegenProgram(programIr);

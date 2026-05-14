@@ -13,12 +13,13 @@
 #include "ExprIR.h"
 
 class IRCodegenVisitor: public IRVisitor {
-    const int NUM_RESERVED_FIELDS = 4;
+    const int NUM_RESERVED_FIELDS = 1;
 protected:
     std::unique_ptr<llvm::LLVMContext> context;
     std::unique_ptr<llvm::Module> module;
     std::unique_ptr<llvm::IRBuilder<>> builder;
-    std::map<std::string, llvm::AllocaInst*> varEnv;
+    std::map<std::string, llvm::Value*> varEnv;
+    std::unordered_map<std::string, const ClassIR*> classEnv;
 public:
     IRCodegenVisitor();
     ~IRCodegenVisitor();
