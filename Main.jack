@@ -1,0 +1,17 @@
+class Main {
+
+   method int add(int a, int b) {
+        var int c;
+        let c = a + b;
+        do Output.printInt(c);
+        return;
+   }
+   function void main() {
+        var Main main;
+        do Main.newInstance();
+        let main = Main.getInstance();
+
+        do main.add(1, 4);
+        return;
+   }
+}
