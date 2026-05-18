@@ -1,4 +1,6 @@
 #pragma once
+#ifndef TOKENIZER_H_
+#define TOKENIZER_H_
 
 #include <string>
 #include <vector>
@@ -97,3 +99,5 @@ public:
         return tokens;
     }
 };
+
+#endif // TOKENIZER_H_

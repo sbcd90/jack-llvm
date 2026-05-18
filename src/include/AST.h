@@ -1,4 +1,6 @@
 #pragma once
+#ifndef AST_H_
+#define AST_H_
 
 #include <memory>
 #include <string>
@@ -58,7 +60,6 @@ struct DoStatementAST {
 
 struct ReturnStatementAST {
     std::unique_ptr<ExprAST> expr;
-    ReturnStatementAST(std::unique_ptr<ExprAST> expr): expr(std::move(expr)) {}
 };
 
 struct VariableDeclAST {
@@ -97,3 +98,4 @@ struct ClassAST {
     std::vector<FunctionAST> functions;
 };
 
+#endif // AST_H_
