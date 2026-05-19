@@ -5,7 +5,33 @@ std::unique_ptr<ExprAST> Parser::parsePrimary() {
     if (tok.type == TokenType::Integer) {
         return std::make_unique<IntegerExprAST>(std::stoi(tok.value));
     }
-    return std::make_unique<VariableExprAST>(tok.value);
+    if (tok.type == TokenType::Identifier) {
+        if (current().value == "(" || current().value == ".") {
+            std::string caller;
+            std::string methodName;
+
+            if (current().value == "(") {
+                caller = "this";
+                methodName = tok.value;
+            } else {
+                caller = tok.value;
+                consume();
+                methodName = consume().value;
+            }
+
+            std::vector<std::unique_ptr<ExprAST>> args;
+            match("(");
+            if (!match(")")) {
+                do {
+                    args.push_back(this->parseExpression());
+                } while (match(","));
+                match(")");
+            }
+            return std::make_unique<MethodCallExprAST>(caller, methodName, std::move(args));
+        }
+        return std::make_unique<VariableExprAST>(tok.value);
+    }
+    throw std::runtime_error("Invalid Expression");
 }
 
 std::unique_ptr<ExprAST> Parser::parseExpression() {
@@ -22,8 +48,18 @@ std::unique_ptr<ExprAST> Parser::parseExpression() {
 }
 
 std::unique_ptr<MethodCallExprAST> Parser::parseMethodCall() {
-    auto caller = this->consume().value;
-    auto methodName = this->consume().value;
+    std::string first = consume().value;
+    std::string caller;
+    std::string methodName;
+
+    if (current().value == ".") {
+        caller = first;
+        consume();
+        methodName = consume().value;
+    } else {
+        caller = "this";
+        methodName = first;
+    }
 
     auto args = std::vector<std::unique_ptr<ExprAST>>{};
     match("(");
@@ -100,7 +136,7 @@ FunctionAST Parser::parseFunction() {
         } else if (match("return")) {
             auto ret = std::make_unique<ReturnStatementAST>();
             if (!match(";")) {
-                ret.expr = this->parseExpression();
+                ret->expr = this->parseExpression();
                 match(";");
             }
             fn.ret = std::move(ret);

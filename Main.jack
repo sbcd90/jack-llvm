@@ -1,6 +1,6 @@
 class Main {
 
-   method int add(int a, int b) {
+   method void add(int a, int b) {
         var int c;
         let c = a + b;
         do Output.printInt(c);
