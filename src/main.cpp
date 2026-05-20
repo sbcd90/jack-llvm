@@ -5,6 +5,7 @@
 
 #include "Tokenizer.h"
 #include "Parser.h"
+#include "ASTToIR.h"
 
 int main(int argc, char **argv) {
     if (argc < 2) {
@@ -36,6 +37,14 @@ int main(int argc, char **argv) {
     Parser parser{tokens};
     auto classAst = parser.parseClass();
     std::cout << "\n===== AST =====\n";
+
+    auto programIR = convertToIR(classAst);
+    auto codegen = std::make_unique<IRCodegenVisitor>();
+    codegen->codegenProgram(programIR);
+    codegen->configureTarget();
+    std::cout << "\n===== LLVM IR =====\n";
+    codegen->dumpLLVMIR();
+    return 0;
 }
 
 //int main() {

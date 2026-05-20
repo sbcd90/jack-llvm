@@ -8,8 +8,7 @@ class Main {
    }
    function void main() {
         var Main main;
-        do Main.newInstance();
-        let main = Main.getInstance();
+        let main = Main.newInstance();
 
         do main.add(1, 4);
         return;
