@@ -36,7 +36,7 @@ cd src
 ./jack1 ../../Main.jack
 ```
 
-- Paste LLVM IR in `test.ll` file and compile
+- Paste LLVM IR in `test.ll` file and compile and run and test
 ```
 clang test.ll -L/opt/homebrew/lib -lgc
 ./a.out
